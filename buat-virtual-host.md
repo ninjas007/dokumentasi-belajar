@@ -28,12 +28,9 @@ Note: Variabel $USER akan mengambil nilai dari user saat ini yang sedang aktif s
 - sudo gedit /var/www/example.com/public_html/index.html
 
 buat struktur html di index.html
-<html>
-  <head>
-    <title>Welcome to Example.com!</title>
-  </head>
-  <body>
-    <h1>Success!  The example.com virtual host is working!</h1>
-  </body>
-</html>
+&lt;html&gt;
+    &lt;div&gt;
+    	Success! this example.com
+    &lt;/div&gt;
+&lt;/html&gt;
 </code>
