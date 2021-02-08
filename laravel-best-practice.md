@@ -3,7 +3,7 @@
 ### Link website
 
 <pre>
-<p>https://www.laravelbestpractices.com/</p>
-<p>https://github.com/alexeymezenin/laravel-best-practices/blob/master/indonesia.md</p>
+<p><a href="https://www.laravelbestpractices.com/">https://www.laravelbestpractices.com/</a></p>
+<p><a href="https://github.com/alexeymezenin/laravel-best-practices/blob/master/indonesia.md">https://github.com/alexeymezenin/laravel-best-practices/blob/master/indonesia.md</a></p>
 
 </pre> 
