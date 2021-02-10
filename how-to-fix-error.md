@@ -10,3 +10,10 @@
 	<li>Install Seperti biasa dan tunggu hingga selesai</li>
 </div>
 </pre>
+
+### How To Fix Error Permission Linux
+<pre>
+	<li>liat user => whoami</li>
+	<li>Beri akses user misal usernya adalha von => sudo chown -R von /path/folder</li>
+	<li>Beri permission, misal 777 => sudo chmod -R 777 /path/folder</li>
+</pre>
