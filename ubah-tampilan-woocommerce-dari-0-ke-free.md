@@ -1,5 +1,6 @@
 # Ubah tampilan harga woocomerce dari 0 ke tulisan free
 
+### tambahkan function ini ke functions.php
 <pre>
 	function wpgeeks_price_override( $price, $product ) {
 	   if ( empty( $product->get_price() ) ) {
