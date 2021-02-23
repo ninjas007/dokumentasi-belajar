@@ -36,6 +36,9 @@ sudo nano /opt/lampp/etc/extra/httpd-vhosts.conf
 <ul>
 	<li>Sesuaikan DocumentRoot dengan root folder project</li>
 </ul>
+<code>
+	<div>tes</div>
+</code>
 </pre>
 
 ### Edit etc hosts
