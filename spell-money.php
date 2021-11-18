@@ -79,7 +79,7 @@ function spellMoney($value, $decimal = 4, $currency = 'Rp. '){
     }
 
 
-    return trim($w);
+    return $currency . trim($w);
 }
           
 spellMoney(100000);
