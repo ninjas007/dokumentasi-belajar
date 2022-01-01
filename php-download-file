@@ -1,0 +1,18 @@
+case with codeigniter
+
+$log = $this->db->get_where('log_sheet', array('callsign' => $callsign))->row_array();
+		$yourFile = './media/'.$log['file_path']; // file assets
+        $file = @fopen($yourFile, "rb");
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename='.$log.'');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($yourFile));
+        while (!feof($file)) {
+            print(@fread($file, 1024 * 8));
+            ob_flush();
+            flush();
+        }
