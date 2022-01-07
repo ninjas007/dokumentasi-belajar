@@ -1,0 +1,21 @@
+$data = 'base64'; // format base64
+
+$dateTime = date('dmYHis');
+$type = explode('/', mime_content_type($data))[1];
+$data = substr($data, strpos($data, ',') + 1);
+
+$data = str_replace( ' ', '+', $data );
+$data = base64_decode($data);
+
+if ($data === false) {
+    throw new \Exception('base64_decode failed');
+}
+$public_path = public_path($path)."/$dateTime.$type";
+
+#check if directory doesnt exist, create it
+if (!file_exists(public_path($path)) && !is_dir(public_path($path))) {
+    mkdir(public_path($path), 0777, true);         
+}
+
+file_put_contents($public_path, $data);
+return $public_path;
