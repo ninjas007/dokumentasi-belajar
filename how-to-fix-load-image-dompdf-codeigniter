@@ -1,0 +1,9 @@
+https://www.adefathudin.com/2021/04/solved-image-not-found-or-type-unknown-dompdf-codeigniter.html
+
+$this->load->library('pdf'); //memanggil library dompdf yang ada di folder libraris
+$this->pdf->loadHtml($html); //load code html yang akan digenerate menjadi pdf
+$this->pdf->setPaper('A4', 'potrait'); // setting ukuran kertas
+$this->pdf->set_option('isRemoteEnabled', true); // <-- object ini yang perlu kita tambahkan 
+$this->pdf->render();
+$output = $this->pdf->output();
+file_put_contents("/mnt/d/adefathudin.pdf", $output);
