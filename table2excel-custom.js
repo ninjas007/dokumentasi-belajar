@@ -1,0 +1,315 @@
+/*
+ *  jQuery table2excel - v1.1.2
+ *  jQuery plugin to export an .xls file in browser from an HTML table
+ *  https://github.com/rainabba/jquery-table2excel
+ *
+ *  Made by rainabba
+ *  Under MIT License
+ */
+//table2excel.js
+(function ( $, window, document, undefined ) {
+    var pluginName = "table2excel",
+
+    defaults = {
+        exclude: ".noExl",
+        name: "Table2Excel",
+        filename: "table2excel",
+        fileext: ".xls",
+        exclude_img: true,
+        exclude_links: true,
+        exclude_inputs: true,
+        preserveColors: false,
+        preserveStyling: true,
+        border: true,
+        title1: "-",
+        title2: "-"
+    };
+
+    // The actual plugin constructor
+    function Plugin ( element, options ) {
+            this.element = element;
+            // jQuery has an extend method which merges the contents of two or
+            // more objects, storing the result in the first object. The first object
+            // is generally empty as we don't want to alter the default options for
+            // future instances of the plugin
+            //
+            this.settings = $.extend( {}, defaults, options );
+            this._defaults = defaults;
+            this._name = pluginName;
+            this.init();
+    }
+
+    Plugin.prototype = {
+        init: function () {
+            var e = this;
+
+            var utf8Heading = "<meta http-equiv=\"content-type\" content=\"application/vnd.ms-excel; charset=UTF-8\">";
+            e.template = {
+                head: "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">" + utf8Heading + "<head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>",
+                sheet: {
+                    head: "<x:ExcelWorksheet><x:Name>",
+                    tail: "</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>"
+                },
+                mid: "</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>",
+                table: {
+                    head: "<table border='0'>",
+                    tail: "</table>"
+                },
+                foot: "</body></html>"
+            };
+
+            var titlerow = "";
+            e.tableRows = [];
+            titlerow = "<tr><td colspan='5' > </td></tr>";
+            e.tableRows.push(titlerow);
+            titlerow = "<tr><td > </td><td style='text-align:center;' colspan='4' >" + e.settings.title1 +"</td></tr>";
+            e.tableRows.push(titlerow);
+            titlerow = "<tr><td > </td><td style='text-align:center;' colspan='4' >" + e.settings.title2 + "</td></tr>";
+            e.tableRows.push(titlerow);
+            titlerow = "<tr><td  colspan='5' > </td></tr>";
+            e.tableRows.push(titlerow);
+
+            
+	
+			// Styling variables
+			var additionalStyles = "";
+			var compStyle = null;
+
+            // get contents of table except for exclude
+            $(e.element).each( function(i,o) {
+                var tempRows = "";
+                $(o).find("tr").not(e.settings.exclude).each(function (i,p) {
+					
+					// Reset for this row
+					additionalStyles = "";
+					
+					// Preserve background and text colors on the row
+					if(e.settings.preserveColors){
+						compStyle = getComputedStyle(p);
+						additionalStyles += (compStyle && compStyle.backgroundColor ? "background-color: " + compStyle.backgroundColor + ";" : "");
+						additionalStyles += (compStyle && compStyle.color ? "color: " + compStyle.color + ";" : "");
+					}
+
+					// Create HTML for Row
+                    tempRows += "<tr style='" + additionalStyles + "'>";
+                    tempRows += "<td> </td>";
+                    
+                    // Loop through each TH and TD
+                    $(p).find("td,th").not(e.settings.exclude).each(function (i,q) { // p did not exist, I corrected
+						
+						// Reset for this column
+						additionalStyles = "";
+						
+						// Preserve background and text colors on the row
+						if(e.settings.preserveColors){
+							compStyle = getComputedStyle(q);
+							additionalStyles += (compStyle && compStyle.backgroundColor ? "background-color: " + compStyle.backgroundColor + ";" : "");
+							additionalStyles += (compStyle && compStyle.color ? "color: " + compStyle.color + ";" : "");
+                            
+						}
+
+                        if(e.settings.preserveStyling){
+                            compStyle = getComputedStyle(q);
+                            additionalStyles += (compStyle && compStyle.textAlign ? "text-align: " + compStyle.textAlign + ";" : "");
+                            additionalStyles += (compStyle && compStyle.fontWeight ? "font-weight: " + compStyle.fontWeight + ";" : "");
+                        }
+                        
+
+                        var rc = {
+                            rows: $(this).attr("rowspan"),
+                            cols: $(this).attr("colspan"),
+                            flag: $(q).find(e.settings.exclude)
+                        };
+
+                        if( rc.flag.length > 0 ) {
+                            tempRows += "<td> </td>"; // exclude it!!
+                        } else {
+                            tempRows += `<td style="${e.settings.border ? 'border: 1px solid black;' : ''}"`;
+                            if( rc.rows > 0) {
+                                tempRows += " rowspan='" + rc.rows + "' ";
+                            }
+                            if( rc.cols > 0) {
+                                tempRows += " colspan='" + rc.cols + "' ";
+                            }
+                            if(additionalStyles){
+								tempRows += " style='" + additionalStyles + "'";
+							}
+                            var temp_text = $(q).html()
+                            // var angka = $(q).data('angka')
+                            // if(typeof $(q).data('angka') != 'undefined') {
+                            //     temp_text = angka
+                            // }
+                            //console.log(angka,temp_text) 
+                            tempRows += ">" + temp_text + "</td>";
+                        }
+                    });
+
+                    tempRows += "</tr>";
+
+                });
+                // exclude img tags
+                if(e.settings.exclude_img) {
+                    tempRows = exclude_img(tempRows);
+                }
+
+                // exclude link tags
+                if(e.settings.exclude_links) {
+                    tempRows = exclude_links(tempRows);
+                }
+
+                // exclude input tags
+                if(e.settings.exclude_inputs) {
+                    tempRows = exclude_inputs(tempRows);
+                }
+                e.tableRows.push(tempRows);
+            });
+
+            e.tableToExcel(e.tableRows, e.settings.name, e.settings.sheetName);
+        },
+
+        tableToExcel: function (table, name, sheetName) {
+            var e = this, fullTemplate="", i, link, a;
+
+            e.format = function (s, c) {
+                return s.replace(/{(\w+)}/g, function (m, p) {
+                    return c[p];
+                });
+            };
+
+            sheetName = typeof sheetName === "undefined" ? "Sheet" : sheetName;
+
+            e.ctx = {
+                worksheet: name || "Worksheet",
+                table: table,
+                sheetName: sheetName
+            };
+
+            fullTemplate= e.template.head;
+
+            if ( $.isArray(table) ) {
+                 Object.keys(table).forEach(function(i){
+                      //fullTemplate += e.template.sheet.head + "{worksheet" + i + "}" + e.template.sheet.tail;
+                      fullTemplate += e.template.sheet.head + sheetName + i + e.template.sheet.tail;
+                });
+            }
+
+            fullTemplate += e.template.mid;
+
+            if ( $.isArray(table) ) {
+                 Object.keys(table).forEach(function(i){
+                    fullTemplate += e.template.table.head + "{table" + i + "}" + e.template.table.tail;
+                });
+            }
+
+            fullTemplate += e.template.foot;
+
+            for (i in table) {
+                e.ctx["table" + i] = table[i];
+            }
+            delete e.ctx.table;
+
+            var isIE = navigator.appVersion.indexOf("MSIE 10") !== -1 || (navigator.userAgent.indexOf("Trident") !== -1 && navigator.userAgent.indexOf("rv:11") !== -1); // this works with IE10 and IE11 both :)
+            //if (typeof msie !== "undefined" && msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // this works ONLY with IE 11!!!
+            if (isIE) {
+                if (typeof Blob !== "undefined") {
+                    //use blobs if we can
+                    fullTemplate = e.format(fullTemplate, e.ctx); // with this, works with IE
+                    fullTemplate = [fullTemplate];
+                    //convert to array
+                    var blob1 = new Blob(fullTemplate, { type: "text/html" });
+                    window.navigator.msSaveBlob(blob1, getFileName(e.settings) );
+                } else {
+                    //otherwise use the iframe and save
+                    //requires a blank iframe on page called txtArea1
+                    txtArea1.document.open("text/html", "replace");
+                    txtArea1.document.write(e.format(fullTemplate, e.ctx));
+                    txtArea1.document.close();
+                    txtArea1.focus();
+                    sa = txtArea1.document.execCommand("SaveAs", true, getFileName(e.settings) );
+                }
+
+            } else {
+                var blob = new Blob([e.format(fullTemplate, e.ctx)], {type: "application/vnd.ms-excel"});
+                window.URL = window.URL || window.webkitURL;
+                link = window.URL.createObjectURL(blob);
+                a = document.createElement("a");
+                a.download = getFileName(e.settings);
+                a.href = link;
+
+                document.body.appendChild(a);
+
+                a.click();
+
+                document.body.removeChild(a);
+            }
+
+            return true;
+        }
+    };
+
+    function getFileName(settings) {
+        return ( settings.filename ? settings.filename : "table2excel" );
+    }
+
+    // Removes all img tags
+    function exclude_img(string) {
+        var _patt = /(\s+alt\s*=\s*"([^"]*)"|\s+alt\s*=\s*'([^']*)')/i;
+        return string.replace(/<img[^>]*>/gi, function myFunction(x){
+            var res = _patt.exec(x);
+            if (res !== null && res.length >=2) {
+                return res[2];
+            } else {
+                return "";
+            }
+        });
+    }
+
+    // Removes all link tags
+    function exclude_links(string) {
+        return string.replace(/<a[^>]*>|<\/a>/gi, "");
+    }
+
+    // Removes input params
+    function exclude_inputs(string) {
+        var _patt = /(\s+value\s*=\s*"([^"]*)"|\s+value\s*=\s*'([^']*)')/i;
+        return string.replace(/<input[^>]*>|<\/input>/gi, function myFunction(x){
+            var res = _patt.exec(x);
+            if (res !== null && res.length >=2) {
+                return res[2];
+            } else {
+                return "";
+            }
+        });
+    }
+
+    $.fn[ pluginName ] = function ( options ) {
+        var e = this;
+            e.each(function() {
+                if ( !$.data( e, "plugin_" + pluginName ) ) {
+                    $.data( e, "plugin_" + pluginName, new Plugin( this, options ) );
+                }
+            });
+
+        // chain jQuery functions
+        return e;
+    };
+
+})( jQuery, window, document );
+
+
+
+// cara manggilnya
+$('#btn-download-excel').on('click', () => {
+        // handle download kalo data ksoong
+        if (total_data == 0) return;
+
+        $("#id-tablenya").table2excel({
+            exclude: ".noExl",
+            name: "Worksheet Name",
+            filename: "Nama File", //do not include extension
+            fileext: ".xlsx", // file extension
+            title1: 'Title 1',
+            title2: 'Title 2',
+            border: false
+        });
+    })
