@@ -1,0 +1,15 @@
+'pdf' => [
+        'enabled' => true,
+        'binary'  => '"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"', // ini yang penting
+        'timeout' => 3600,
+        'options' => [],
+        'env'     => [],
+    ],
+
+    'image' => [
+        'enabled' => true,
+        'binary'  => '"C:\Program Files\wkhtmltopdf\bin\wkhtmltoimage.exe"', // ini yang penting
+        'timeout' => false,
+        'options' => [],
+        'env'     => [],
+    ],
