@@ -8,6 +8,6 @@ ORDER BY sequence_name
 
 #change the_primary_key_sequence which show on the before query and change the_table with table errors duplicate
 
-```SELECT setval('the_primary_key_sequence', (SELECT MAX(the_primary_key) FROM the_table)+1);
+SELECT setval('the_primary_key_sequence', (SELECT MAX(the_primary_key) FROM the_table)+1);
 
 
